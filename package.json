@@ -1,0 +1,38 @@
+{
+  "name": "musematch",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Personalized museum discovery and visit-planning platform",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:server dev:client",
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "build": "npm run build --workspace server && npm run build --workspace client",
+    "typecheck": "npm run typecheck --workspace shared && npm run typecheck --workspace server && npm run typecheck --workspace client",
+    "test": "npm run test --workspace server",
+    "lint": "npm run lint --workspace server && npm run lint --workspace client",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run db:migrate --workspace server",
+    "db:seed": "npm run db:seed --workspace server",
+    "db:studio": "npm run db:studio --workspace server",
+    "format": "prettier --write \"{client,server,shared}/src/**/*.{ts,tsx}\" \"server/prisma/seed.ts\" \"server/scripts/*.ts\"",
+    "format:check": "prettier --check \"{client,server,shared}/src/**/*.{ts,tsx}\"",
+    "verify:e2e": "npm run verify:e2e --workspace @musematch/server",
+    "verify:ui": "node scripts/verifyBrowser.mjs"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "playwright-core": "^1.62.1",
+    "prettier": "^3.9.6",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

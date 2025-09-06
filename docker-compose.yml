@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: musematch-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: musematch
+      POSTGRES_PASSWORD: musematch
+      POSTGRES_DB: musematch
+    ports:
+      - "5433:5432"
+    volumes:
+      - musematch-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U musematch -d musematch"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  musematch-pgdata:

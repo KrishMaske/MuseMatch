@@ -1,0 +1,24 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": [
+      "node",
+      "vitest/globals"
+    ],
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@musematch/shared": [
+        "../shared/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "prisma/**/*.ts",
+    "scripts/**/*.ts",
+    "../shared/src/**/*.ts"
+  ]
+}
