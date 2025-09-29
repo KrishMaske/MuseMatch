@@ -1,0 +1,209 @@
+// MuseMatch database schema.
+//
+// Identity lives in Supabase Auth; everything application-specific lives here
+// and references the Supabase user UUID through User.supabaseUserId.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+enum MuseumSource {
+  MET
+  AIC
+}
+
+enum InteractionType {
+  VIEW
+  LIKE
+  DISLIKE
+  SAVE
+  UNSAVE
+  SKIP
+  SEARCH
+  ADD_TO_VISIT
+  REMOVE_FROM_VISIT
+}
+
+model User {
+  id                  String   @id @default(cuid())
+  /// The Supabase Auth user UUID. Never accepted from a request body.
+  supabaseUserId      String   @unique
+  email               String?
+  displayName         String?
+  avatarUrl           String?
+  onboardingCompleted Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  preferenceProfile PreferenceProfile?
+  interactions      Interaction[]
+  collections       Collection[]
+  visits            Visit[]
+
+  @@map("users")
+}
+
+model PreferenceProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// PreferenceWeights set by the onboarding quiz.
+  explicitPreferences   Json  @default("{}")
+  /// PreferenceWeights accumulated from interactions.
+  behavioralPreferences Json  @default("{}")
+  explorationScore      Float @default(0.5)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("preference_profiles")
+}
+
+model Artwork {
+  id          String       @id @default(cuid())
+  source      MuseumSource
+  /// The provider's own object id, unique within that provider.
+  externalId  String
+  museumName  String
+
+  title         String
+  artist        String?
+  artistDisplay String?
+
+  year      String?
+  dateStart Int?
+  dateEnd   Int?
+
+  imageUrl     String?
+  thumbnailUrl String?
+
+  medium         String?
+  department     String?
+  classification String?
+  culture        String?
+  period         String?
+
+  description String?
+  objectUrl   String?
+
+  /// Normalized lower-case descriptors, derived in the provider layer.
+  tags     String[] @default([])
+  metadata Json     @default("{}")
+
+  /// pgvector column. Prisma cannot select this directly; the embedding
+  /// repository reads and writes it with parameterized raw SQL.
+  embedding  Unsupported("vector(1536)")?
+  embeddedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  interactions    Interaction[]
+  collectionItems CollectionItem[]
+  visitItems      VisitItem[]
+
+  @@unique([source, externalId])
+  @@index([source])
+  @@index([department])
+  @@index([dateStart])
+  @@index([artist])
+  @@map("artworks")
+}
+
+model Interaction {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artworkId String
+  artwork   Artwork         @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  type      InteractionType
+  /// Signed strength for this event, from INTERACTION_STRENGTHS.
+  weight    Float
+
+  sourcePage String?
+  query      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, artworkId])
+  @@index([userId, type])
+  @@map("interactions")
+}
+
+model Collection {
+  id          String  @id @default(cuid())
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items CollectionItem[]
+
+  @@index([userId])
+  @@map("collections")
+}
+
+model CollectionItem {
+  id           String     @id @default(cuid())
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  artworkId    String
+  artwork      Artwork    @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([collectionId, artworkId])
+  @@index([collectionId])
+  @@map("collection_items")
+}
+
+model Visit {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  museum           MuseumSource
+  name             String
+  visitDate        DateTime?
+  availableMinutes Int
+  /// True once an itinerary has been generated for this visit.
+  generated        Boolean      @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items VisitItem[]
+
+  @@index([userId])
+  @@map("visits")
+}
+
+model VisitItem {
+  id                  String   @id @default(cuid())
+  visitId             String
+  visit               Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  artworkId           String
+  artwork             Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  position            Int
+  estimatedMinutes    Int
+  recommendationScore Float    @default(0)
+  /// Snapshot of why this artwork was chosen, shown on the itinerary.
+  reasons             String[] @default([])
+
+  createdAt DateTime @default(now())
+
+  @@unique([visitId, artworkId])
+  @@index([visitId, position])
+  @@map("visit_items")
+}
