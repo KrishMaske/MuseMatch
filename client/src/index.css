@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * MuseMatch palette.
+ *
+ * Warm paper, near-black ink, one muted terracotta accent. The restraint is
+ * deliberate: every card on this site is dominated by a photograph of an
+ * artwork, and a saturated interface would fight it. This reads closer to a
+ * museum publication than to an admin console.
+ */
+
+@layer base {
+  :root {
+    --paper: 40 30% 97%;
+    --ink: 24 12% 12%;
+
+    --background: 40 30% 97%;
+    --foreground: 24 12% 12%;
+
+    --card: 40 40% 99%;
+    --card-foreground: 24 12% 12%;
+
+    --popover: 40 40% 99%;
+    --popover-foreground: 24 12% 12%;
+
+    --primary: 18 46% 38%;
+    --primary-foreground: 40 40% 98%;
+
+    --secondary: 36 18% 92%;
+    --secondary-foreground: 24 12% 20%;
+
+    --muted: 36 16% 93%;
+    --muted-foreground: 26 8% 42%;
+
+    --accent: 18 46% 38%;
+    --accent-foreground: 40 40% 98%;
+
+    --destructive: 4 62% 44%;
+    --destructive-foreground: 40 40% 98%;
+
+    --border: 32 14% 87%;
+    --input: 32 14% 84%;
+    --ring: 18 46% 38%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --paper: 24 10% 9%;
+    --ink: 40 20% 94%;
+
+    --background: 24 10% 9%;
+    --foreground: 40 20% 94%;
+
+    --card: 24 9% 12%;
+    --card-foreground: 40 20% 94%;
+
+    --popover: 24 9% 12%;
+    --popover-foreground: 40 20% 94%;
+
+    --primary: 20 56% 60%;
+    --primary-foreground: 24 12% 10%;
+
+    --secondary: 24 8% 18%;
+    --secondary-foreground: 40 20% 92%;
+
+    --muted: 24 8% 17%;
+    --muted-foreground: 36 8% 62%;
+
+    --accent: 20 56% 60%;
+    --accent-foreground: 24 12% 10%;
+
+    --destructive: 4 58% 52%;
+    --destructive-foreground: 40 20% 96%;
+
+    --border: 24 8% 22%;
+    --input: 24 8% 26%;
+    --ring: 20 56% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+
+  /* Focus must always be visible: a museum audience is a broad audience. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Respect a reader who has asked for less motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Small caps label used above section headings. */
+  .eyebrow {
+    @apply text-[0.7rem] font-medium uppercase tracking-[0.16em] text-muted-foreground;
+  }
+
+  /* Skip link, visible only when focused. */
+  .skip-link {
+    @apply absolute left-4 top-4 z-50 -translate-y-24 rounded-md bg-primary px-4 py-2
+           text-sm font-medium text-primary-foreground transition-transform
+           focus-visible:translate-y-0;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Loading placeholder that matches the paper ground rather than flashing grey. */
+  .skeleton {
+    @apply relative overflow-hidden bg-muted;
+  }
+
+  .skeleton::after {
+    @apply absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r
+           from-transparent via-background/60 to-transparent;
+    content: '';
+  }
+}
